@@ -1,0 +1,42 @@
+name: Arch Linux Build via Issue
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  arch-job:
+    if: contains(github.event.issue.title, '[build]')
+    runs-on: ubuntu-latest
+    
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Check out project code
+        uses: actions/checkout@v4
+
+      - name: System initialization & Setup non-root user
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git sudo neofetch
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          chown -R builder:builder /__w/the-other-project-/the-other-project-
+
+      - name: Display Arch Environment Info
+        run: |
+          su builder -c "neofetch"
+
+      - name: Read Issue Body
+        run: |
+          echo "正在處理的 Issue 標題: ${{ github.event.issue.title }}"
+          echo "----------------------------------------"
+          echo "以下為 Issue 的詳細內文："
+          cat << 'EOF'
+          ${{ github.event.issue.body }}
+          EOF
+
+      - name: Run Build Command
+        run: |
+          echo "開始在 Arch Linux 執行你的編譯或指令..."
